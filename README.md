@@ -34,24 +34,24 @@ gray100 = #808080FF
 // [3]
 // Functions
 smoothrng(x, t, m) =>
-    wper = t * 2 - 1
-    avrng = ta.ema(math.abs(x - x[1]), t)
-    smoothrng = ta.ema(avrng, wper) * m
+	wper = t * 2 - 1
+	avrng = ta.ema(math.abs(x - x[1]), t)
+	smoothrng = ta.ema(avrng, wper) * m
 rngfilt(x, r) =>
-    rngfilt = x
-    rngfilt := x > nz(rngfilt[1]) ? x - r < nz(rngfilt[1]) ? nz(rngfilt[1]) : x - r : x + r > nz(rngfilt[1]) ? nz(rngfilt[1]) : x + r
+	rngfilt = x
+	rngfilt := x > nz(rngfilt[1]) ? x - r < nz(rngfilt[1]) ? nz(rngfilt[1]) : x - r : x + r > nz(rngfilt[1]) ? nz(rngfilt[1]) : x + r
 percWidth(len, perc) => (ta.highest(len) - ta.lowest(len)) * perc / 100
 securityNoRep(sym, res, src) => request.security(sym, res, src, barmerge.gaps_off, barmerge.lookahead_on)
 swingPoints(prd) =>
-    pivHi = ta.pivothigh(prd, prd)
-    pivLo = ta.pivotlow (prd, prd)
-    last_pivHi = ta.valuewhen(pivHi, pivHi, 1)
-    last_pivLo = ta.valuewhen(pivLo, pivLo, 1)
-    hh = pivHi and pivHi > last_pivHi ? pivHi : na
-    lh = pivHi and pivHi < last_pivHi ? pivHi : na
-    hl = pivLo and pivLo > last_pivLo ? pivLo : na
-    ll = pivLo and pivLo < last_pivLo ? pivLo : na
-    [hh, lh, hl, ll]
+	pivHi = ta.pivothigh(prd, prd)
+	pivLo = ta.pivotlow (prd, prd)
+	last_pivHi = ta.valuewhen(pivHi, pivHi, 1)
+	last_pivLo = ta.valuewhen(pivLo, pivLo, 1)
+	hh = pivHi and pivHi > last_pivHi ? pivHi : na
+	lh = pivHi and pivHi < last_pivHi ? pivHi : na
+	hl = pivLo and pivLo > last_pivLo ? pivLo : na
+	ll = pivLo and pivLo < last_pivLo ? pivLo : na
+	[hh, lh, hl, ll]
 f_chartTfInMinutes() =>
     float _resInMinutes = timeframe.multiplier * (
       timeframe.isseconds ? 1                   :
