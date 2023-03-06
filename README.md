@@ -2,9 +2,11 @@
 // © Mjjka
 //@version=5
 //
+```
 strategy(title='SAIYAN OCC Strategy R5.33', overlay=true, pyramiding=0, default_qty_type=strategy.percent_of_equity, default_qty_value=10, calc_on_every_tick=false)
 // [1]
 // === INPUTS ===
+
 useRes = input(defval=true, title='Use Alternate Signals')
 intRes = input(defval=8, title='Multiplier for Alernate Signals')
 stratRes = timeframe.ismonthly ? str.tostring(timeframe.multiplier * intRes, '###M') : timeframe.isweekly ? str.tostring(timeframe.multiplier * intRes, '###W') : timeframe.isdaily ? str.tostring(timeframe.multiplier * intRes, '###D') : timeframe.isintraday ? str.tostring(timeframe.multiplier * intRes, '####') : '60'
@@ -15,6 +17,7 @@ offsetALMA = input.float(defval=0.85, title='Offset for ALMA', minval=0, step=0.
 scolor = input(true, title='Show coloured Bars to indicate Trend?')
 delayOffset = input.int(defval=0, title='Delay Open/Close MA (Forces Non-Repainting)', minval=0, step=1)
 tradeType = input.string('BOTH', title='What trades should be taken : ', options=['LONG', 'SHORT', 'BOTH', 'NONE'])
+
 // === /INPUTS ===
 // [2]
 h = input(false, title='Signals for Heikin Ashi Candles')
@@ -237,3 +240,4 @@ if (ebar == 0 or tdays <= ebar) and tradeType != 'NONE'
     strategy.entry('short', strategy.short, when=shortCond == true and tradeType != 'LONG')
     strategy.close('long', when=shortCond == true and tradeType == 'LONG')
     strategy.close('short', when=longCond == true and tradeType == 'SHORT')
+```
