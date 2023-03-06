@@ -24,6 +24,7 @@ h = input(false, title='Signals for Heikin Ashi Candles')
 src = h ? request.security(ticker.heikinashi(syminfo.tickerid), timeframe.period, close, lookahead=barmerge.lookahead_off) : close
 
 noRepaint = request.security(syminfo.tickerid, "D", close[1], lookahead = barmerge.lookahead_on)
+
 // Constants colours that include fully non-transparent option.
 green100 = #008000FF
 lime100 = #00FF00FF
@@ -40,11 +41,14 @@ smoothrng(x, t, m) =>
 	wper = t * 2 - 1
 	avrng = ta.ema(math.abs(x - x[1]), t)
 	smoothrng = ta.ema(avrng, wper) * m
+	
 rngfilt(x, r) =>
 	rngfilt = x
 	rngfilt := x > nz(rngfilt[1]) ? x - r < nz(rngfilt[1]) ? nz(rngfilt[1]) : x - r : x + r > nz(rngfilt[1]) ? nz(rngfilt[1]) : x + r
+	
 percWidth(len, perc) => (ta.highest(len) - ta.lowest(len)) * perc / 100
 securityNoRep(sym, res, src) => request.security(sym, res, src, barmerge.gaps_off, barmerge.lookahead_on)
+
 swingPoints(prd) =>
 	pivHi = ta.pivothigh(prd, prd)
 	pivLo = ta.pivotlow (prd, prd)
@@ -55,6 +59,7 @@ swingPoints(prd) =>
 	hl = pivLo and pivLo > last_pivLo ? pivLo : na
 	ll = pivLo and pivLo < last_pivLo ? pivLo : na
 	[hh, lh, hl, ll]
+	
 f_chartTfInMinutes() =>
     float _resInMinutes = timeframe.multiplier * (
       timeframe.isseconds ? 1                   :
@@ -62,10 +67,12 @@ f_chartTfInMinutes() =>
       timeframe.isdaily   ? 60. * 24            :
       timeframe.isweekly  ? 60. * 24 * 7        :
       timeframe.ismonthly ? 60. * 24 * 30.4375  : na)
+      
 f_kc(src, len, sensitivity) =>
     basis = ta.sma(src, len)
     span  = ta.atr(len)
     [basis + span * sensitivity, basis - span * sensitivity]
+    
 wavetrend(src, chlLen, avgLen) =>
     esa = ta.ema(src, chlLen)
     d = ta.ema(math.abs(src - esa), chlLen)
@@ -73,9 +80,11 @@ wavetrend(src, chlLen, avgLen) =>
     wt1 = ta.ema(ci, avgLen)
     wt2 = ta.sma(wt1, 3)
     [wt1, wt2]
+    
 f_top_fractal(src) => src[4] < src[2] and src[3] < src[2] and src[2] > src[1] and src[2] > src[0]
 f_bot_fractal(src) => src[4] > src[2] and src[3] > src[2] and src[2] < src[1] and src[2] < src[0]
 f_fractalize (src) => f_top_fractal(src) ? 1 : f_bot_fractal(src) ? -1 : 0
+
 f_findDivs(src, topLimit, botLimit) =>
     fractalTop = f_fractalize(src) > 0 and src[2] >= topLimit ? src[2] : na
     fractalBot = f_fractalize(src) < 0 and src[2] <= botLimit ? src[2] : na
@@ -122,6 +131,7 @@ security_lower_tf(_symbol, _timeframe, _expression) =>
 equal_tf(res) => str.tonumber(res) == f_chartTfInMinutes() and not timeframe.isseconds
 higher_tf(res) => str.tonumber(res) > f_chartTfInMinutes() or timeframe.isseconds
 too_small_tf(res) => (timeframe.isweekly and res=="1") or (timeframe.ismonthly and str.tonumber(res) < 10)
+
 securityNoRep1(sym, res, src) =>
     bool bull_ = na
     bull_ := equal_tf(res) ? src : bull_
@@ -149,10 +159,12 @@ TFDBull   = securityNoRep1(syminfo.tickerid, "1440", emaBull)
 [wtDivBear2, wtDivBull2] = f_findDivs(wt2, 45, -65)
 wtDivBull = wtDivBull1 or wtDivBull2
 wtDivBear = wtDivBear1 or wtDivBear2
+
 ////////////////////////////////////////////////////////
 // === BASE FUNCTIONS ===
 // [5]
 // Returns MA input selection variant, default to SMA if blank or typo.
+
 variant(type, src, len, offSig, offALMA) =>
     v1 = ta.sma(src, len)  // Simple
     v2 = ta.ema(src, len)  // Exponential
@@ -185,22 +197,29 @@ reso(exp, use, res) =>
 
 // === SERIES SETUP ===
 // [6]
+
 closeSeries = variant(basisType, close[delayOffset], basisLen, offsetSigma, offsetALMA)
 openSeries = variant(basisType, open[delayOffset], basisLen, offsetSigma, offsetALMA)
+
 // === /SERIES ===
 // Get Alternate resolution Series if selected.
+
 closeSeriesAlt = reso(closeSeries, useRes, stratRes)
 openSeriesAlt = reso(openSeries, useRes, stratRes)
+
 //
+
 trendColour = closeSeriesAlt > openSeriesAlt ? color.green : color.red
 bcolour = closeSeries > openSeriesAlt ? lime100 : red100
 barcolor(scolor ? bcolour : na, title='Bar Colours')
 closeP = plot(closeSeriesAlt, title='Close Series', color=trendColour, linewidth=2, style=plot.style_line, transp=20)
 openP = plot(openSeriesAlt, title='Open Series', color=trendColour, linewidth=2, style=plot.style_line, transp=20)
 fill(closeP, openP, color=trendColour, transp=80)
-//
+
+
 // === /ALERT conditions.
 // [7]
+
 buy = ta.crossover(closeSeriesAlt, openSeriesAlt) and barstate.isconfirmed
 sell = ta.crossunder(closeSeriesAlt, openSeriesAlt) and barstate.isconfirmed
 
@@ -213,16 +232,20 @@ plotshape(sell, title = "Sell", text = 'Sell', style = shape.labeldown, location
 // === STRATEGY ===
 // [8]
 // stop loss
+
 slPoints = input.int(defval=0, title='Initial Stop Loss Points (zero to disable)', minval=0)
 tpPoints = input.int(defval=0, title='Initial Target Profit Points (zero for disable)', minval=0)
+
 // Include bar limiting algorithm
 ebar = input.int(defval=4000, title='Number of Bars for Back Testing', minval=0)
 dummy = input(false, title='- SET to ZERO for Daily or Longer Timeframes')
 //
+
 // Calculate how many mars since last bar
 tdays = (timenow - time) / 60000.0  // number of minutes since last bar
 tdays := timeframe.ismonthly ? tdays / 1440.0 / 5.0 / 4.3 / timeframe.multiplier : timeframe.isweekly ? tdays / 1440.0 / 5.0 / timeframe.multiplier : timeframe.isdaily ? tdays / 1440.0 / timeframe.multiplier : tdays / timeframe.multiplier  // number of bars since last bar
 //
+
 //set up exit parameters
 TP = tpPoints > 0 ? tpPoints : na
 SL = slPoints > 0 ? slPoints : na
@@ -230,6 +253,7 @@ SL = slPoints > 0 ? slPoints : na
 // === /STRATEGY ===
 // [9]
 ////////////////////////////////////////////////////////////////////////////////
+
 // to automate put this in trendinview message:     {{strategy.order.alert_message}}
 i_alert_txt_entry_long = input.text_area(defval = "", title = "Long Entry Message", group = "Alerts")
 i_alert_txt_entry_short = input.text_area(defval = "", title = "Short Entry Message", group = "Alerts")
